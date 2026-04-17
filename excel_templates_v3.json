@@ -1,0 +1,148 @@
+[
+  {
+    "name": "기본 전체 양식",
+    "mapping": [
+      {
+        "header": "주문일시",
+        "formula": "{주문일시}"
+      },
+      {
+        "header": "마켓",
+        "formula": "{마켓}"
+      },
+      {
+        "header": "아이디",
+        "formula": "{아이디}"
+      },
+      {
+        "header": "주문번호",
+        "formula": "{주문번호}"
+      },
+      {
+        "header": "상품명",
+        "formula": "{상품명}"
+      },
+      {
+        "header": "수령인",
+        "formula": "{수령인}"
+      },
+      {
+        "header": "연락처",
+        "formula": "{연락처}"
+      },
+      {
+        "header": "주소",
+        "formula": "{주소}"
+      },
+      {
+        "header": "배송메모",
+        "formula": "{배송메모}"
+      },
+      {
+        "header": "결제금액",
+        "formula": "{결제금액}"
+      },
+      {
+        "header": "정산금액",
+        "formula": "{정산금액}"
+      }
+    ]
+  },
+  {
+    "name": "탱크 양식",
+    "mapping": [
+      {
+        "header": "주문일자",
+        "formula": "{주문일시}"
+      },
+      {
+        "header": "상품명",
+        "formula": "{상품명}"
+      },
+      {
+        "header": "옵션",
+        "formula": "{옵션}"
+      },
+      {
+        "header": "옵션 코드",
+        "formula": "{판매자상품코드}"
+      },
+      {
+        "header": "수령인",
+        "formula": "{수령인}"
+      },
+      {
+        "header": "수령인번호",
+        "formula": "{연락처}"
+      },
+      {
+        "header": "주소",
+        "formula": "{주소}"
+      },
+      {
+        "header": "결제금액",
+        "formula": "{결제금액}"
+      },
+      {
+        "header": "정산금액",
+        "formula": "{정산금액}"
+      },
+      {
+        "header": "판매자주문가격",
+        "formula": ""
+      },
+      {
+        "header": "구매처",
+        "formula": ""
+      },
+      {
+        "header": "주문번호(구매처)",
+        "formula": ""
+      },
+      {
+        "header": "택배사",
+        "formula": "{택배사}"
+      },
+      {
+        "header": "송장번호",
+        "formula": "{송장번호}"
+      },
+      {
+        "header": "수량",
+        "formula": "{수량}"
+      },
+      {
+        "header": "배송메모",
+        "formula": "{배송메모}"
+      },
+      {
+        "header": "마진",
+        "formula": ""
+      },
+      {
+        "header": "마진률",
+        "formula": ""
+      },
+      {
+        "header": "비고",
+        "formula": ""
+      },
+      {
+        "header": "상품번호",
+        "formula": "{상품번호}"
+      },
+      {
+        "header": "주문번호",
+        "formula": "{주문번호}"
+      },
+      {
+        "header": "구매자번호",
+        "formula": "{구매자번호}"
+      },
+      {
+        "header": "우편번호",
+        "formula": "{우편번호}"
+      }
+    ]
+  }
+]

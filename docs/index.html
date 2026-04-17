@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마이샵 - 쇼핑몰 통합 관리 프로그램</title>
+    <meta name="description" content="쿠팡 셀러를 위한 주문관리, 송장등록, CS메모, 엑셀 다운로드를 한 곳에서. Windows & Mac 지원.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 60'><path d='M6 18L3 56C3 57.7 4.3 59 6 59H44C45.7 59 47 57.7 47 56L44 18H6Z' fill='%231a6db5' opacity='0.9'/><path d='M6 18H44V22H6V18Z' fill='%231a6db5'/><path d='M16 18C16 18 15 4 25 4' fill='none' stroke='%231a6db5' stroke-width='3' stroke-linecap='round'/><path d='M34 18C34 18 35 4 25 4' fill='none' stroke='%231a6db5' stroke-width='3' stroke-linecap='round'/><path d='M18 18C18 18 17.5 7 25 7' fill='none' stroke='%231a6db5' stroke-width='2' stroke-linecap='round' opacity='0.5'/><path d='M32 18C32 18 32.5 7 25 7' fill='none' stroke='%231a6db5' stroke-width='2' stroke-linecap='round' opacity='0.5'/></svg>">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #1a6db5;
+            --primary-dark: #134d80;
+            --primary-light: #e8f4fd;
+            --accent: #f39c12;
+            --text: #2c3e50;
+            --text-light: #6c757d;
+            --bg: #f8fafc;
+            --white: #ffffff;
+            --shadow: 0 2px 20px rgba(0,0,0,0.08);
+            --shadow-lg: 0 10px 40px rgba(0,0,0,0.12);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e8e8e8;
+            z-index: 100;
+            padding: 0 20px;
+        }
+        .nav-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+        .nav-logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .nav-logo svg {
+            width: 32px;
+            height: 32px;
+        }
+        .nav-links { display: flex; gap: 28px; list-style: none; }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-light);
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--primary); }
+
+        /* Hero */
+        .hero {
+            padding: 140px 20px 60px;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary-light) 0%, #f0f7ff 50%, var(--white) 100%);
+        }
+        .hero-badge {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            color: var(--text);
+        }
+        .hero h1 span { color: var(--primary); }
+        .hero p {
+            font-size: 18px;
+            color: var(--text-light);
+            max-width: 560px;
+            margin: 0 auto 40px;
+        }
+        .hero-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+        .btn-hero {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 36px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.25s;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-hero svg { width: 22px; height: 22px; flex-shrink: 0; }
+        .btn-hero-win {
+            background: linear-gradient(135deg, #0078d4, #005a9e);
+            color: white;
+            box-shadow: 0 4px 16px rgba(0,120,212,0.35);
+        }
+        .btn-hero-win:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,120,212,0.45);
+        }
+        .btn-hero-mac {
+            background: linear-gradient(135deg, #333, #1a1a1a);
+            color: white;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+        }
+        .btn-hero-mac:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+        }
+        .btn-hero-label { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.2; }
+        .btn-hero-small { font-size: 11px; font-weight: 400; opacity: 0.8; }
+        .btn-hero-big { font-size: 16px; font-weight: 700; }
+        .btn-outline {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            background: var(--white);
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+        .btn-outline:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+        }
+        .hero-version {
+            margin-top: 16px;
+            font-size: 13px;
+            color: var(--text-light);
+        }
+
+        /* Supported Markets */
+        .markets {
+            padding: 48px 20px;
+            background: var(--white);
+            border-top: 1px solid #eef2f7;
+        }
+        .markets-inner {
+            max-width: 700px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .markets-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 28px;
+        }
+        .markets-logos {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 48px;
+            flex-wrap: wrap;
+        }
+        .market-logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            transition: transform 0.2s;
+        }
+        .market-logo:hover { transform: translateY(-3px); }
+        .market-logo-box {
+            width: 100px;
+            height: 88px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            transition: box-shadow 0.3s;
+            padding: 16px;
+        }
+        .market-logo:hover .market-logo-box {
+            box-shadow: 0 8px 28px rgba(0,0,0,0.14);
+        }
+        .market-logo-box.coupang { background: #fff; }
+        .market-logo-box.naver { background: #fff; }
+        .market-logo-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        .market-logo-status {
+            font-size: 11px;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .status-active { background: #e8faf1; color: #27ae60; }
+        .status-soon { background: #fef5e7; color: #e67e22; }
+
+        /* Section */
+        section { padding: 80px 20px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        .section-title {
+            text-align: center;
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .section-sub {
+            text-align: center;
+            font-size: 16px;
+            color: var(--text-light);
+            margin-bottom: 56px;
+        }
+
+        /* Features */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+        .feature-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s;
+        }
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        .feature-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .feature-card h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .feature-card p {
+            font-size: 14px;
+            color: var(--text-light);
+            line-height: 1.7;
+        }
+        .icon-blue { background: #e8f4fd; }
+        .icon-green { background: #e8faf1; }
+        .icon-orange { background: #fef5e7; }
+        .icon-purple { background: #f4ecf7; }
+        .icon-red { background: #fde8e8; }
+        .icon-teal { background: #e8faf7; }
+
+        /* How it works */
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 32px;
+            counter-reset: step;
+        }
+        .step {
+            text-align: center;
+            position: relative;
+        }
+        .step-number {
+            width: 48px;
+            height: 48px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .step h3 { font-size: 17px; margin-bottom: 8px; }
+        .step p { font-size: 14px; color: var(--text-light); }
+
+        /* Download Section */
+        #download {
+            background: linear-gradient(135deg, #1a6db5, #2980b9);
+            color: white;
+        }
+        #download .section-title { color: white; }
+        #download .section-sub { color: rgba(255,255,255,0.8); }
+
+        /* Download Tabs */
+        .dl-tabs-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .dl-tabs {
+            display: flex;
+            background: rgba(255,255,255,0.15);
+            border-radius: 14px 14px 0 0;
+            overflow: hidden;
+        }
+        .dl-tab {
+            flex: 1;
+            padding: 16px 20px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: rgba(255,255,255,0.6);
+            border-bottom: 3px solid transparent;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .dl-tab:hover { background: rgba(255,255,255,0.08); }
+        .dl-tab.active {
+            color: white;
+            background: rgba(255,255,255,0.12);
+            border-bottom-color: white;
+        }
+        .dl-tab svg { width: 22px; height: 22px; }
+
+        .dl-panel {
+            display: none;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-top: none;
+            border-radius: 0 0 14px 14px;
+            padding: 40px 36px;
+            text-align: center;
+        }
+        .dl-panel.active { display: block; }
+
+        .dl-os-icon { font-size: 56px; margin-bottom: 12px; }
+        .dl-panel h3 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+        .dl-panel .dl-version { font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 6px; }
+        .dl-panel .dl-req { font-size: 13px; color: rgba(255,255,255,0.5); margin-bottom: 28px; }
+
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            color: var(--primary);
+            padding: 14px 36px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+        }
+        .btn-download svg { width: 20px; height: 20px; }
+
+        .dl-info {
+            margin-top: 24px;
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+        }
+        .dl-info-item {
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+        }
+        .dl-info-item strong {
+            display: block;
+            color: rgba(255,255,255,0.8);
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+
+        .dl-install-note {
+            margin-top: 20px;
+            padding: 14px 20px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 10px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.6;
+        }
+
+        /* Requirements */
+        .requirements {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: var(--shadow);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .requirements h3 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .req-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .req-item h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--primary);
+        }
+        .req-item p {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+
+        /* FAQ */
+        .faq-list { max-width: 700px; margin: 0 auto; }
+        .faq-item {
+            background: var(--white);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .faq-question {
+            padding: 20px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+        .faq-question:hover { background: #fafafa; }
+        .faq-arrow {
+            transition: transform 0.3s;
+            font-size: 12px;
+            color: var(--text-light);
+        }
+        .faq-item.open .faq-arrow { transform: rotate(180deg); }
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .faq-answer-inner {
+            padding: 0 24px 20px;
+            font-size: 14px;
+            color: var(--text-light);
+            line-height: 1.7;
+        }
+
+        /* Footer */
+        footer {
+            background: #1a2332;
+            color: rgba(255,255,255,0.6);
+            padding: 40px 20px;
+            text-align: center;
+            font-size: 13px;
+        }
+        footer a { color: rgba(255,255,255,0.8); text-decoration: none; }
+        footer a:hover { color: white; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 32px; }
+            .hero p { font-size: 16px; }
+            .section-title { font-size: 28px; }
+            .req-grid { grid-template-columns: 1fr; }
+            .nav-links { display: none; }
+            .markets-logos { gap: 28px; }
+            .market-logo-box { width: 72px; height: 72px; }
+            .dl-info { flex-direction: column; gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav>
+    <div class="nav-inner">
+        <a href="#" class="nav-logo">
+            <svg viewBox="0 0 50 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- 쇼핑백 몸체 -->
+                <path d="M6 18L3 56C3 57.7 4.3 59 6 59H44C45.7 59 47 57.7 47 56L44 18H6Z" fill="var(--primary)" opacity="0.9"/>
+                <!-- 쇼핑백 윗면 -->
+                <path d="M6 18H44V22H6V18Z" fill="var(--primary)"/>
+                <!-- 손잡이 왼쪽 -->
+                <path d="M16 18C16 18 15 4 25 4" fill="none" stroke="var(--primary)" stroke-width="3" stroke-linecap="round"/>
+                <!-- 손잡이 오른쪽 -->
+                <path d="M34 18C34 18 35 4 25 4" fill="none" stroke="var(--primary)" stroke-width="3" stroke-linecap="round"/>
+                <!-- 손잡이 왼쪽 (안쪽) -->
+                <path d="M18 18C18 18 17.5 7 25 7" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+                <!-- 손잡이 오른쪽 (안쪽) -->
+                <path d="M32 18C32 18 32.5 7 25 7" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+            </svg>
+            마이샵
+        </a>
+        <ul class="nav-links">
+            <li><a href="#features">기능</a></li>
+            <li><a href="#how">사용방법</a></li>
+            <li><a href="#download">다운로드</a></li>
+            <li><a href="#faq">FAQ</a></li>
+        </ul>
+    </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+    <span class="hero-badge">Windows & Mac 지원</span>
+    <h1>쇼핑몰 관리,<br><span>마이샵</span> 하나로 끝.</h1>
+    <p>주문 조회부터 송장 등록, CS 관리, 엑셀 다운로드까지.<br>쿠팡 셀러를 위한 올인원 통합 관리 프로그램.</p>
+    <div class="hero-buttons">
+        <a id="hero-dl-win" href="https://github.com/kingth0506/myshop/releases/latest/download/MyShop_Install.zip" class="btn-hero btn-hero-win">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 12V6.75l8-1.25V12H3zm0 .5h8v6.5l-8-1.25V12.5zM11.5 12V5.35l9.5-1.6V12h-9.5zm0 .5h9.5v8.25l-9.5-1.6V12.5z"/></svg>
+            <span class="btn-hero-label">
+                <span class="btn-hero-small">Windows 10+</span>
+                <span class="btn-hero-big">Windows 다운로드</span>
+            </span>
+        </a>
+        <a id="hero-dl-mac" href="https://github.com/kingth0506/myshop/releases/latest/download/MYSHOP_Mac.pkg" class="btn-hero btn-hero-mac">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+            <span class="btn-hero-label">
+                <span class="btn-hero-small">macOS 12+</span>
+                <span class="btn-hero-big">Mac 다운로드</span>
+            </span>
+        </a>
+    </div>
+    <p class="hero-version" id="hero-version">현재 버전 v1.0.7</p>
+</section>
+
+<!-- Supported Markets -->
+<div class="markets">
+    <div class="markets-inner">
+        <p class="markets-label">지원 마켓</p>
+        <div class="markets-logos">
+            <!-- Coupang -->
+            <div class="market-logo">
+                <div class="market-logo-box coupang">
+                    <img src="coupang_logo.png" alt="쿠팡" style="width: 80px; height: auto;">
+                </div>
+                <span class="market-logo-name">쿠팡</span>
+                <span class="market-logo-status status-active">지원중</span>
+            </div>
+            <!-- Naver -->
+            <div class="market-logo">
+                <div class="market-logo-box naver">
+                    <img src="naver_logo.png" alt="네이버" style="width: 72px; height: auto;">
+                </div>
+                <span class="market-logo-name">네이버</span>
+                <span class="market-logo-status status-soon">준비중</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features -->
+<section id="features">
+    <div class="container">
+        <h2 class="section-title">주요 기능</h2>
+        <p class="section-sub">복잡한 셀러 업무를 간편하게 처리하세요</p>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon icon-blue">&#128202;</div>
+                <h3>대시보드</h3>
+                <p>발송대기, 배송지시, 배송중, 배송완료, 클레임 현황을 한눈에 확인. 실시간 주문 현황 모니터링.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon icon-green">&#128203;</div>
+                <h3>주문 통합 관리</h3>
+                <p>주문 상태별 조회 및 관리. 발송대기부터 배송완료까지 전체 주문 흐름을 한 곳에서 처리.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon icon-orange">&#128666;</div>
+                <h3>송장 등록</h3>
+                <p>200+ 택배사 지원. 송장번호 일괄 등록 및 수정으로 배송 처리 시간을 대폭 단축.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon icon-purple">&#128196;</div>
+                <h3>엑셀 다운로드</h3>
+                <p>주문 데이터를 엑셀로 한번에 다운로드. 상품명 자동 변환 규칙 설정으로 발주서 작성 자동화.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon icon-red">&#128172;</div>
+                <h3>CS 메모 관리</h3>
+                <p>주문별 CS 메모를 기록하고 관리. 고객 문의 이력을 한눈에 파악할 수 있습니다.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon icon-teal">&#128274;</div>
+                <h3>멀티 계정</h3>
+                <p>여러 쿠팡 판매자 계정을 등록하고 빠르게 전환. 복수 스토어 운영자를 위한 필수 기능.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How it works -->
+<section id="how" style="background: var(--white);">
+    <div class="container">
+        <h2 class="section-title">사용 방법</h2>
+        <p class="section-sub">3단계로 간편하게 시작하세요</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>프로그램 다운로드</h3>
+                <p>Windows 또는 Mac 버전을 다운로드하고 설치합니다.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>회원가입 & 로그인</h3>
+                <p>계정을 생성하고 쿠팡 판매자 계정을 연동합니다.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>통합 관리 시작</h3>
+                <p>대시보드에서 주문 현황을 확인하고 업무를 처리하세요.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Download -->
+<section id="download">
+    <div class="container">
+        <h2 class="section-title">다운로드</h2>
+        <p class="section-sub">운영체제에 맞는 버전을 선택하세요</p>
+
+        <div class="dl-tabs-wrapper">
+            <!-- Tabs -->
+            <div class="dl-tabs">
+                <div class="dl-tab active" onclick="switchTab('windows')">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 12V6.75l8-1.25V12H3zm0 .5h8v6.5l-8-1.25V12.5zM11.5 12V5.35l9.5-1.6V12h-9.5zm0 .5h9.5v8.25l-9.5-1.6V12.5z"/></svg>
+                    Windows
+                </div>
+                <div class="dl-tab" onclick="switchTab('mac')">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                    macOS
+                </div>
+            </div>
+
+            <!-- Windows Panel -->
+            <div class="dl-panel active" id="panel-windows">
+                <div class="dl-os-icon">&#128187;</div>
+                <h3>Windows</h3>
+                <p class="dl-version" id="dl-version-win">v1.0.7</p>
+                <p class="dl-req">Windows 10 이상 (64bit)</p>
+                <a id="section-dl-win" href="https://github.com/kingth0506/myshop/releases/latest/download/MyShop_Install.zip" class="btn-download">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                    Windows 설치파일 다운로드
+                </a>
+                <div class="dl-info">
+                    <div class="dl-info-item">
+                        <strong>파일 형식</strong>
+                        .zip (압축파일)
+                    </div>
+                    <div class="dl-info-item">
+                        <strong>설치 방법</strong>
+                        다운로드 후 실행
+                    </div>
+                    <div class="dl-info-item">
+                        <strong>디스크 공간</strong>
+                        500MB 이상
+                    </div>
+                </div>
+                <div class="dl-install-note">
+                    Windows Defender에서 경고가 뜰 수 있습니다.<br>
+                    "추가 정보" > "실행"을 클릭하여 설치를 진행해주세요.
+                </div>
+                <!-- 숨겨진 직접 설치 링크 (EXE) -->
+                <a id="direct-dl-win" href="#" style="display:none;"></a>
+            </div>
+
+            <!-- Mac Panel -->
+            <div class="dl-panel" id="panel-mac">
+                <div class="dl-os-icon">&#127823;</div>
+                <h3>macOS</h3>
+                <p class="dl-version" id="dl-version-mac">v1.0.7</p>
+                <p class="dl-req">macOS 12 Monterey 이상</p>
+                <a id="section-dl-mac" href="https://github.com/kingth0506/myshop/releases/latest/download/MYSHOP_Mac.pkg" class="btn-download">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                    Mac 설치파일 다운로드
+                </a>
+                <div class="dl-info">
+                    <div class="dl-info-item">
+                        <strong>파일 형식</strong>
+                        .zip (압축파일)
+                    </div>
+                    <div class="dl-info-item">
+                        <strong>설치 방법</strong>
+                        Applications에 드래그
+                    </div>
+                    <div class="dl-info-item">
+                        <strong>디스크 공간</strong>
+                        500MB 이상
+                    </div>
+                </div>
+                <div class="dl-install-note">
+                    <strong>⚠️ "손상되었기 때문에 열 수 없습니다" 경고 시:</strong><br>
+                    터미널을 열고 아래 명령어를 실행해주세요:<br>
+                    <code style="background:#1a1a2e;color:#0f0;padding:4px 8px;border-radius:4px;font-size:12px;display:inline-block;margin-top:4px;">xattr -cr /Applications/마이샵통합관리.app</code><br>
+                    <span style="font-size:12px;color:#aaa;">또는: 우클릭 > 열기 > "열기" 클릭</span>
+                </div>
+                <!-- 숨겨진 직접 설치 링크 (DMG) -->
+                <a id="direct-dl-mac" href="#" style="display:none;"></a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- System Requirements -->
+<section id="requirements">
+    <div class="container">
+        <div class="requirements">
+            <h3>시스템 요구사항</h3>
+            <div class="req-grid">
+                <div class="req-item">
+                    <h4>운영체제</h4>
+                    <p>Windows 10+ / macOS 12+</p>
+                </div>
+                <div class="req-item">
+                    <h4>메모리</h4>
+                    <p>4GB RAM 이상 권장</p>
+                </div>
+                <div class="req-item">
+                    <h4>디스크 공간</h4>
+                    <p>500MB 이상 여유 공간</p>
+                </div>
+                <div class="req-item">
+                    <h4>인터넷</h4>
+                    <p>인터넷 연결 필수</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" style="background: var(--white);">
+    <div class="container">
+        <h2 class="section-title">자주 묻는 질문</h2>
+        <p class="section-sub">궁금한 점이 있으신가요?</p>
+        <div class="faq-list">
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    프로그램은 무료인가요?
+                    <span class="faq-arrow">&#9660;</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-inner">
+                        회원가입 후 이용 가능하며, 이용 기간은 관리자에게 문의해주세요.
+                    </div>
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    어떤 마켓을 지원하나요?
+                    <span class="faq-arrow">&#9660;</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-inner">
+                        현재 쿠팡(Coupang)을 지원하고 있으며, 네이버 스마트스토어는 준비중입니다.
+                    </div>
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    Mac에서 "개발자를 확인할 수 없습니다" 경고가 뜹니다
+                    <span class="faq-arrow">&#9660;</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-inner">
+                        시스템 설정 &gt; 개인정보 보호 및 보안에서 "확인 없이 열기"를 클릭하시거나, 앱을 우클릭 &gt; 열기로 실행하시면 됩니다.
+                    </div>
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    여러 쿠팡 계정을 사용할 수 있나요?
+                    <span class="faq-arrow">&#9660;</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-inner">
+                        네, 여러 개의 쿠팡 판매자 계정을 등록하고 자유롭게 전환하며 사용할 수 있습니다.
+                    </div>
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    업데이트는 어떻게 하나요?
+                    <span class="faq-arrow">&#9660;</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-inner">
+                        새 버전이 출시되면 프로그램 실행 시 자동으로 업데이트 알림이 표시됩니다. 안내에 따라 최신 버전을 다운로드하시면 됩니다.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer>
+    <p>&copy; 2025 마이샵. All rights reserved.</p>
+</footer>
+
+<script>
+// Download tab switching
+function switchTab(os) {
+    document.querySelectorAll('.dl-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.dl-panel').forEach(p => p.classList.remove('active'));
+
+    if (os === 'windows') {
+        document.querySelector('.dl-tab:first-child').classList.add('active');
+        document.getElementById('panel-windows').classList.add('active');
+    } else {
+        document.querySelector('.dl-tab:last-child').classList.add('active');
+        document.getElementById('panel-mac').classList.add('active');
+    }
+}
+
+// Auto-detect OS
+(function() {
+    const ua = navigator.userAgent.toLowerCase();
+    if (ua.includes('mac')) switchTab('mac');
+})();
+
+// FAQ toggle
+function toggleFaq(el) {
+    const item = el.parentElement;
+    const answer = item.querySelector('.faq-answer');
+    const isOpen = item.classList.contains('open');
+
+    document.querySelectorAll('.faq-item').forEach(i => {
+        i.classList.remove('open');
+        i.querySelector('.faq-answer').style.maxHeight = null;
+    });
+
+    if (!isOpen) {
+        item.classList.add('open');
+        answer.style.maxHeight = answer.scrollHeight + 'px';
+    }
+}
+
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    });
+});
+
+// GitHub Releases 자동 업데이트
+(function() {
+    fetch('https://api.github.com/repos/kingth0506/myshop/releases/latest')
+        .then(r => r.json())
+        .then(data => {
+            const ver = data.tag_name; // e.g. "v1.0.7"
+            const assets = data.assets || [];
+
+            // 버전 표시 업데이트
+            document.getElementById('hero-version').textContent = '현재 버전 ' + ver;
+            document.getElementById('dl-version-win').textContent = ver;
+            document.getElementById('dl-version-mac').textContent = ver;
+
+            // 다운로드 링크 업데이트
+            assets.forEach(a => {
+                const url = a.browser_download_url;
+                const name = a.name.toLowerCase();
+                // 공개 링크 (ZIP)
+                if (name.endsWith('.zip') && name.includes('install')) {
+                    document.getElementById('hero-dl-win').href = url;
+                    document.getElementById('section-dl-win').href = url;
+                } else if (name.endsWith('.zip') && name.includes('mac')) {
+                    document.getElementById('hero-dl-mac').href = url;
+                    document.getElementById('section-dl-mac').href = url;
+                }
+                // 숨겨진 직접 설치 링크 (DMG/EXE)
+                if (name.endsWith('.exe') && name.includes('install')) {
+                    document.getElementById('direct-dl-win').href = url;
+                } else if (name.endsWith('.dmg')) {
+                    document.getElementById('direct-dl-mac').href = url;
+                }
+            });
+        })
+        .catch(() => {}); // 실패 시 기본값(하드코딩) 유지
+})();
+</script>
+
+</body>
+</html>
