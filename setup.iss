@@ -1,10 +1,10 @@
 [Setup]
-AppName=MYSHOP 주문관리
-AppVersion=1.0.0
-DefaultDirName={autopf}\MYSHOP
-DefaultGroupName=MYSHOP
+AppName=ORDERMASTER 주문관리
+AppVersion=1.0.2
+DefaultDirName={autopf}\ORDERMASTER
+DefaultGroupName=ORDERMASTER
 OutputDir=installer
-OutputBaseFilename=MyShop_Install
+OutputBaseFilename=ORDERMASTER_Install
 Compression=lzma2
 SolidCompression=yes
 SetupIconFile=icon.ico
@@ -17,14 +17,14 @@ ArchitecturesInstallIn64BitMode=x64compatible
 Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
 
 [Files]
-Source: "dist\MYSHOP\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "dist\ORDERMASTER\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\MYSHOP 주문관리"; Filename: "{app}\MYSHOP.exe"
-Name: "{autodesktop}\MYSHOP 주문관리"; Filename: "{app}\MYSHOP.exe"
+Name: "{group}\ORDERMASTER 주문관리"; Filename: "{app}\ORDERMASTER.exe"
+Name: "{autodesktop}\ORDERMASTER 주문관리"; Filename: "{app}\ORDERMASTER.exe"
 
 [Run]
-Filename: "{app}\MYSHOP.exe"; Description: "MYSHOP 실행"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\ORDERMASTER.exe"; Description: "ORDERMASTER 실행"; Flags: nowait postinstall skipifsilent
 
 [Code]
 procedure CurStepChanged(CurStep: TSetupStep);
@@ -33,6 +33,6 @@ var
 begin
   if CurStep = ssInstall then
   begin
-    Exec('powershell.exe', '-Command "Get-Process MYSHOP -ErrorAction SilentlyContinue | Stop-Process -Force"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    Exec('powershell.exe', '-Command "Get-Process ORDERMASTER -ErrorAction SilentlyContinue | Stop-Process -Force"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   end;
 end;

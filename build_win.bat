@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-echo ===== MYSHOP Windows Build =====
+echo ===== ORDERMASTER Windows Build =====
 
 cd /d "%~dp0"
 git pull origin main
@@ -17,7 +17,7 @@ echo 버전: v%VER%
 
 echo [4] GitHub Release 업로드...
 gh release create v%VER% --title "v%VER%" --notes "v%VER% 업데이트" 2>nul
-gh release upload v%VER% installer\MyShop_Install.exe --clobber
+gh release upload v%VER% installer\ORDERMASTER_Install.exe --clobber
 
 echo [5] 완료!
 pause
