@@ -40,7 +40,7 @@ from naver_crawl import (do_naver_login, load_naver_cookies, delete_naver_cookie
 # ═══════════════════════════════════════════
 # 설정
 # ═══════════════════════════════════════════
-VER = "1.0.0"
+VER = "1.0.1"
 ADMIN = "admin0904"
 SB = "https://nzacpbeodeqdotbkbepo.supabase.co"
 SK = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im56YWNwYmVvZGVxZG90YmtiZXBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxODUyMTYsImV4cCI6MjA5MDc2MTIxNn0.9hytdZfOAUCchS8K0LFXaXBSRjzqWXLilR7FhNw8K1c"
