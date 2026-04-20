@@ -33,7 +33,7 @@ from PyQt6.QtGui import *
 from coupang_auth import (do_login, save_account, delete_account,
     load_all_accounts, load_cookies, save_ip, get_public_ip, _data_path,
     verify_cookies)
-from coupang_crawl import (get_all_with_returns, register_invoices_on_wing)
+from coupang_crawl import (get_all_with_returns, register_invoices_on_wing, get_seller_codes)
 from naver_crawl import (do_naver_login, load_naver_cookies, delete_naver_cookies,
     verify_naver_cookies, register_invoices_on_naver)
 
@@ -270,13 +270,40 @@ class CollectWorker(QThread):
             pct=int(i/max(len(cpg),1)*80); uid=a["username"]; pw=s.pws.get(uid,"")
             s.prog.emit(pct,f"{uid} 수집 중...")
             row={"username":uid,"market":"coupang"}; row.update({k:0 for k in ad})
+            collected_vids=set()
             try:
                 res=get_all_with_returns(uid,pw,s.sd,s.ed,callback=lambda m:s.prog.emit(pct,m))
                 if res and res.get("code")==200:
                     for nm in ad:
                         items=res["data"].get(nm,[])
                         ad[nm].extend(items); st[nm]+=len(items); row[nm]=len(items)
+                        for it in items:
+                            if it.get("market")=="naver" or it.get("linked_username")!=uid: continue
+                            for oit in it.get("orderItems",[]) or []:
+                                vid=str(oit.get("vendorItemId") or "")
+                                if vid and not oit.get("sellerProductCode"):
+                                    collected_vids.add(vid)
             except Exception as e: print(f"수집오류({uid}):{e}")
+            # 판매자상품코드 일괄 조회 → cmap 업데이트 + ad 항목 채워넣기
+            if collected_vids and not s._stop:
+                try:
+                    s.prog.emit(pct,f"{uid} 판매자상품코드 조회 중... ({len(collected_vids)}개)")
+                    code_res=get_seller_codes(uid,pw,list(collected_vids),callback=lambda m:s.prog.emit(pct,m))
+                    # get_seller_codes 는 {vid: sku, ...} 딕트 직접 반환
+                    code_map=code_res if isinstance(code_res,dict) else {}
+                    if code_map:
+                        cur_cmap=load_codemap(); cur_cmap.update({str(k):str(v) for k,v in code_map.items() if v})
+                        save_codemap(cur_cmap)
+                        for nm in ad:
+                            for it in ad[nm]:
+                                if it.get("linked_username")!=uid: continue
+                                for oit in it.get("orderItems",[]) or []:
+                                    if oit.get("sellerProductCode"): continue
+                                    vid=str(oit.get("vendorItemId") or "")
+                                    if vid and code_map.get(vid):
+                                        oit["sellerProductCode"]=code_map[vid]
+                except Exception as e:
+                    print(f"판매자상품코드 조회 오류({uid}):{e}")
             ast.append(row)
         if not s._stop:
             navs=[a for a in s.accs if a.get("market")=="naver"]
@@ -354,6 +381,7 @@ class CheckBox(QWidget):
 class CheckBoxHeader(QHeaderView):
     """0번 컬럼에 체크박스 그리는 헤더"""
     toggled=pyqtSignal(bool)
+    sortClicked=pyqtSignal(int)  # 정렬용 클릭 신호
     def __init__(s,parent=None):
         super().__init__(Qt.Orientation.Horizontal,parent)
         s._checked=True
@@ -387,6 +415,8 @@ class CheckBoxHeader(QHeaderView):
             s.viewport().update()
             s.toggled.emit(s._checked)
             return
+        if idx >= 0:
+            s.sortClicked.emit(idx)
         super().mousePressEvent(e)
 
 class ToggleSwitch(QWidget):
@@ -484,14 +514,14 @@ class AuthDialog(QDialog):
         super().__init__()
         s.setWindowModality(Qt.WindowModality.ApplicationModal)
         s.setWindowFlags(s.windowFlags()|Qt.WindowType.WindowStaysOnTopHint)
-        s.setWindowTitle("MYSHOP")
+        s.setWindowTitle("ORDERMASTER")
         s.setFixedSize(360,400)
         s.setStyleSheet(f"QDialog{{background:#fff}}QLabel{{color:{FG}}}")
         s.uname=""; s.exp_at=""; s.uid=""
         ly=QVBoxLayout(s); ly.setContentsMargins(40,36,40,28); ly.setSpacing(14)
 
-        t=QLabel("MYSHOP"); t.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        t.setStyleSheet(f"font-size:24px;font-weight:800;color:{FG};letter-spacing:2px")
+        t=QLabel("ORDERMASTER"); t.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        t.setStyleSheet(f"font-size:22px;font-weight:800;color:{FG};letter-spacing:2px")
         ly.addWidget(t)
         sub=QLabel("주문 통합관리"); sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sub.setStyleSheet(f"font-size:12px;color:{FG2}")
@@ -641,7 +671,7 @@ class AuthDialog(QDialog):
 class App(QMainWindow):
     def __init__(s, uname, exp_at, uid):
         super().__init__()
-        s.setWindowTitle(f"MYSHOP  |  {uname}")
+        s.setWindowTitle(f"ORDERMASTER  |  {uname}")
         s.setMinimumSize(1200,800)
         s.uname=uname; s.exp_at=exp_at; s.uid=uid
         s.order_data={k:[] for k in list(OSTATUS)+list(CSTATUS)}
@@ -654,7 +684,7 @@ class App(QMainWindow):
         top=QFrame(); top.setFixedHeight(56)
         top.setStyleSheet(f"background:{WHITE};border-bottom:1px solid {BD}")
         tl=QHBoxLayout(top); tl.setContentsMargins(24,0,24,0); tl.setSpacing(16)
-        logo=QLabel("MYSHOP"); logo.setStyleSheet(f"font-size:18px;font-weight:800;color:{FG};letter-spacing:1px")
+        logo=QLabel("ORDERMASTER"); logo.setStyleSheet(f"font-size:16px;font-weight:800;color:{FG};letter-spacing:1px")
         tl.addWidget(logo); tl.addSpacing(32)
 
         # 탭 네비게이션
@@ -756,7 +786,7 @@ class App(QMainWindow):
         # 헤더
         head=QHBoxLayout(); head.setSpacing(10)
         ic=QLabel("●"); ic.setFixedWidth(14); ic.setStyleSheet(f"color:{ACCENT};font-size:14px;background:transparent")
-        ttl=QLabel("MYSHOP 종료"); ttl.setStyleSheet(f"font-size:17px;font-weight:700;color:{FG};background:transparent")
+        ttl=QLabel("ORDERMASTER 종료"); ttl.setStyleSheet(f"font-size:17px;font-weight:700;color:{FG};background:transparent")
         head.addWidget(ic); head.addWidget(ttl); head.addStretch()
         v.addLayout(head)
 
@@ -798,7 +828,7 @@ class App(QMainWindow):
             e.accept(); QApplication.quit()
         elif choice[0]=="hide":
             e.ignore(); s.hide()
-            if hasattr(s,"_tray"): s._tray.showMessage("MYSHOP","백그라운드에서 실행 중입니다.",QSystemTrayIcon.MessageIcon.Information,2000)
+            if hasattr(s,"_tray"): s._tray.showMessage("ORDERMASTER","백그라운드에서 실행 중입니다.",QSystemTrayIcon.MessageIcon.Information,2000)
         else:
             e.ignore()
 
@@ -1291,7 +1321,15 @@ class App(QMainWindow):
             t.setColumnWidth(0,60); t.setColumnWidth(4,180); t.setColumnWidth(5,140); t.setColumnWidth(7,140)
             t.verticalHeader().setDefaultSectionSize(40)
             t._all_checked=True
+            t._sort_state={}  # {col: 'asc'|'desc'}
             _hdr.toggled.connect(lambda checked,tbl=t:s._toggle_all_v(tbl,checked))
+            # 주문일시(1), 아이디(3) 클릭 시 정렬
+            def _mk_sort(name):
+                def _h(idx):
+                    if idx not in (1,3): return
+                    s._sort_order(name, idx)
+                return _h
+            _hdr.sortClicked.connect(_mk_sort(nm))
             # 더블클릭 → 주문 상세
             def _mk_dblclick(name):
                 def handler(idx):
@@ -1528,7 +1566,7 @@ class App(QMainWindow):
                 "invoiceNumber":inv_item.text().strip(),
                 "courierCode":courier_code,
                 "courierName":row_courier,
-                "deliveryCompanyCode":courier_code,  # 네이버용
+                "deliveryCompanyCode":courier_code,
                 "username":uid_item.text() if uid_item else "",
             })
         if not orders:
@@ -1540,7 +1578,6 @@ class App(QMainWindow):
         ok_cnt=fail_cnt=0; errs=[]
         pws=load_pw()
         navs=load_nav()
-        # 쿠팡
         cpg_orders=[o for o in orders if o["market"]!="naver"]
         by_user={}
         for o in cpg_orders: by_user.setdefault(o["username"],[]).append(o)
@@ -1549,7 +1586,6 @@ class App(QMainWindow):
             res=register_invoices_on_wing(uid,pw,uorders)
             ok_cnt+=res.get("success",0); fail_cnt+=res.get("fail",0)
             errs.extend(res.get("errors",[]))
-        # 네이버
         nav_orders=[o for o in orders if o["market"]=="naver"]
         by_nav={}
         for o in nav_orders: by_nav.setdefault(o["username"],[]).append(o)
@@ -1603,6 +1639,30 @@ class App(QMainWindow):
         """)
         cb.setSizePolicy(QSizePolicy.Policy.Expanding,QSizePolicy.Policy.Expanding)
         return cb
+
+    def _sort_order(s, nm, col):
+        """주문 테이블 정렬: col=1(주문일시), col=3(아이디). 같은 컬럼 재클릭 시 방향 토글."""
+        t = s.otbls.get(nm)
+        if t is None: return
+        data = s.order_data.get(nm, [])
+        if not data: return
+        key_fn = {
+            1: lambda d: (d.get("orderedAt") or ""),
+            3: lambda d: (d.get("linked_username") or ""),
+        }.get(col)
+        if key_fn is None: return
+        # 방향 토글
+        cur = t._sort_state.get(col, None)
+        new_dir = "asc" if cur != "asc" else "desc"
+        # 다른 컬럼 상태 초기화
+        t._sort_state = {col: new_dir}
+        reverse = (new_dir == "desc")
+        try:
+            data.sort(key=key_fn, reverse=reverse)
+        except Exception as e:
+            print(f"정렬 오류: {e}"); return
+        s.order_data[nm] = data
+        s._fill_order(nm, data)
 
     def _fill_order(s,nm,data):
         t=s.otbls[nm]; t.setRowCount(0)

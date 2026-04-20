@@ -562,7 +562,7 @@ def do_naver_login(account_id="default", callback=None, naver_id=None, naver_pw=
         # 1. 먼저 셀러센터 접속 시도 → 이미 로그인돼 있으면 바로 성공
         if callback: callback("스마트스토어 셀러센터 접속 중...")
         driver.get(NAVER_BASE)
-        time.sleep(1.5)
+        time.sleep(3)
 
         def _is_on_smartstore():
             url = driver.current_url
@@ -590,7 +590,7 @@ def do_naver_login(account_id="default", callback=None, naver_id=None, naver_pw=
         if not already_logged_in:
             if callback: callback("'로그인하기' 버튼 클릭 중...")
             entry_clicked = False
-            for _ in range(8):
+            for _ in range(15):
                 for sel in ["button.btn-login", "button.btn.btn-login",
                             "button[ng-click*='vm.login']", "button[ng-click*='login']"]:
                     try:
@@ -611,10 +611,10 @@ def do_naver_login(account_id="default", callback=None, naver_id=None, naver_pw=
                                 entry_clicked = True; break
                         except: pass
                 if entry_clicked: break
-                time.sleep(0.5)
-            time.sleep(1.2)
+                time.sleep(1)
+            time.sleep(2)
 
-            # 2-1. 로그인 방식 탭 선택
+            # 2-1. 로그인 방식 탭 선택 (accounts.commerce.naver.com)
             if callback: callback("로그인 방식 탭 선택...")
             tab_text = "네이버 아이디로 로그인" if login_type == "naver" else "이메일/판매자 아이디로 로그인"
             original_window = driver.current_window_handle
@@ -639,7 +639,7 @@ def do_naver_login(account_id="default", callback=None, naver_id=None, naver_pw=
             if tab_clicked:
                 time.sleep(0.8)
 
-            # 2-2. 네이버 아이디 탭은 새 팝업 창으로 nid.naver.com 이 열림 → 해당 창으로 switch
+            # 2-2. 네이버 아이디 탭은 새 팝업 창으로 nid.naver.com 열림 → 해당 창으로 switch
             in_iframe = False
             switched_window = False
             if login_type == "naver":
@@ -654,10 +654,8 @@ def do_naver_login(account_id="default", callback=None, naver_id=None, naver_pw=
                                     break
                             except: pass
                         if switched_window: break
-                    # 팝업 아니고 같은 창에서 이동한 경우
                     if "nid.naver" in (driver.current_url or "").lower():
                         break
-                    # iframe 케이스도 혹시 모르니
                     iframes = driver.find_elements(By.TAG_NAME, "iframe")
                     for fr in iframes:
                         try:
@@ -668,7 +666,6 @@ def do_naver_login(account_id="default", callback=None, naver_id=None, naver_pw=
                         except: pass
                     if in_iframe: break
                     time.sleep(0.4)
-                # 페이지 안정화
                 for _ in range(8):
                     try:
                         ready = driver.execute_script("return document.readyState")
@@ -678,9 +675,9 @@ def do_naver_login(account_id="default", callback=None, naver_id=None, naver_pw=
                 time.sleep(0.5)
 
             auto_filled = False
-            # ID/PW 입력 필드 대기 (최대 ~6초)
+            # ID/PW 입력 필드 대기
             id_el = pw_el = None
-            for _ in range(12):
+            for _ in range(25):
                 for sel_id, sel_pw in [
                     ("#id", "#pw"),
                     ("input[name='id']", "input[name='pw']"),
@@ -695,38 +692,18 @@ def do_naver_login(account_id="default", callback=None, naver_id=None, naver_pw=
                             break
                     except: pass
                 if id_el and pw_el: break
-                time.sleep(0.5)
+                time.sleep(1)
 
             if naver_id and naver_pw and id_el and pw_el:
                 try:
-                    def _fill(el, value):
-                        """ID/PW 강제 입력 — send_keys 실패 시 JS fallback + input 이벤트 dispatch"""
-                        try: el.click()
-                        except: pass
-                        try: el.clear()
-                        except: pass
-                        try:
-                            el.send_keys(value)
-                        except Exception:
-                            pass
-                        # 값 검증
-                        try:
-                            cur = el.get_attribute("value") or ""
-                        except: cur = ""
-                        if cur != value:
-                            # JS 로 value 강제 + input/change 이벤트 dispatch (Angular 리바인딩)
-                            driver.execute_script(
-                                "arguments[0].focus();"
-                                "arguments[0].value = arguments[1];"
-                                "arguments[0].dispatchEvent(new Event('input', {bubbles: true}));"
-                                "arguments[0].dispatchEvent(new Event('change', {bubbles: true}));",
-                                el, value
-                            )
-
-                    _fill(id_el, naver_id)
-                    _fill(pw_el, naver_pw)
+                    id_el.click(); id_el.clear()
+                    for ch in naver_id:
+                        id_el.send_keys(ch); time.sleep(random.uniform(0.05, 0.15))
+                    pw_el.click(); pw_el.clear()
+                    for ch in naver_pw:
+                        pw_el.send_keys(ch); time.sleep(random.uniform(0.05, 0.15))
                     if callback: callback("로그인 시도 중...")
-                    time.sleep(0.4)
+                    time.sleep(0.8)
                     clicked = False
                     # 1) 클래스 기반 — sell.smartstore 로그인 버튼 (btn btn-login)
                     for sel in ["button.btn-login", "button.btn.btn-login",
@@ -846,13 +823,17 @@ def do_naver_login(account_id="default", callback=None, naver_id=None, naver_pw=
                     "message": f"셀러센터 쿠키 수집 실패 (쿠키 {len(raw_cookies)}개, 스마트스토어 쿠키 {'있음' if has_smartstore else '없음'})"}
         cookies = _selenium_to_playwright_cookies(raw_cookies)
 
-        # 5. merchant_no + 아이디 추출
+        # 5. merchant_no + 아이디 추출 (브라우저 네비게이션 없이 JS fetch 로 JSON 받기)
         merchant_no = ""
         try:
-            driver.get(f"{NAVER_BASE}/api/v1/sellers/account")
-            time.sleep(2)
-            body_txt = driver.find_element(By.TAG_NAME, "body").text
-            data = json.loads(body_txt)
+            body_txt = driver.execute_async_script("""
+                const cb = arguments[arguments.length - 1];
+                fetch(arguments[0], { credentials: 'include', headers: { 'Accept': 'application/json' } })
+                    .then(r => r.text())
+                    .then(t => cb(t))
+                    .catch(e => cb(''));
+            """, f"{NAVER_BASE}/api/v1/sellers/account")
+            data = json.loads(body_txt) if body_txt else {}
             merchant_no = str(data.get("naverPay", {}).get("referenceKey", ""))
             api_id = data.get("loginId") or data.get("userId") or data.get("id") or ""
             if api_id and account_id == "default":
@@ -1128,15 +1109,10 @@ INVOICE_MUTATION = """mutation updateDeliveryInvoiceInfoList_ForSaleDelivery($me
 
 
 async def scrape_register_naver_invoices(account_id, merchant_no, orders, callback=None):
-    """네이버 스마트스토어 송장 일괄 등록.
-
-    orders: [{"productOrderNo": str, "deliveryCompanyCode": str, "invoiceNumber": str, "deliveryMethodType": str}, ...]
-    반환: {"success": 성공건수, "fail": 실패건수, "errors": [에러문자열]}
-    """
+    """네이버 스마트스토어 송장 일괄 등록."""
     if not orders:
         return {"success": 0, "fail": 0, "errors": []}
 
-    # merchant_no 자동 로드
     if not merchant_no:
         try:
             p = _data_path("naver_accounts.json")
@@ -1162,7 +1138,6 @@ async def scrape_register_naver_invoices(account_id, merchant_no, orders, callba
         await page.goto(NAVER_BASE, wait_until="domcontentloaded")
         await asyncio.sleep(1)
 
-        # GraphQL payload 작성 — 한 번에 일괄 전송
         invoice_list = []
         for o in orders:
             item = {
@@ -1211,7 +1186,6 @@ async def scrape_register_naver_invoices(account_id, merchant_no, orders, callba
                 fail_cnt = len(failure_list)
                 for f in failure_list:
                     errors.append(f"{f.get('productOrderNo','')}: {f.get('errorMessage','')}")
-                # success 가 숫자가 아니라 리스트/누락일 수도 있음 — 보정
                 if success_cnt == 0 and not failure_list:
                     success_cnt = len(invoice_list)
         except Exception as e:
